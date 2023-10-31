@@ -30,7 +30,7 @@ async def on_ready():
 
 
 @bot.slash_command(description="Generates 4 images with balanced options", guild_ids=[TESTING_GUILD_ID], force_global=FORCE_GLOBAL)
-async def imagine(interaction: nextcord.Interaction, prompt: str):
+async def imagine(interaction: nextcord.Interaction, prompt: str, negative_prompt: str = DEFAULT_NEGATIVE_PROMPT):
     if len(prompt) == 0:
         raise commands.errors.MissingRequiredArgument(prompt)
     log.info(f"Generating image with prompt: {prompt}")
@@ -40,19 +40,19 @@ async def imagine(interaction: nextcord.Interaction, prompt: str):
     # need to call sd.generate_image() 4 times
     # then send the images
     opts = {
-        'height': 512,
-        'width': 512,
+        'height': 1024,
+        'width': 1024,
     }
     if 'portrait' in prompt:
-        opts['height'] = 768
+        opts['height'] = 1536
     elif 'landscape' in prompt or 'background' in prompt:
-        opts['width'] = 768
+        opts['width'] = 1536
     if 'background' in prompt:
         prompt.replace('background', '')
     tasks = []
     for _ in range(4):
-        tasks.append(sd.generate_image(model="ssd-1b", prompt=prompt,
-                     guidance_scale=9, negative_prompt=DEFAULT_NEGATIVE_PROMPT, num_inference_steps=30, **opts))
+        tasks.append(sd.generate_image(prompt=prompt,
+                     negative_prompt=negative_prompt, num_inference_steps=30, **opts))
 
     files = []
     results = await asyncio.gather(*tasks)
